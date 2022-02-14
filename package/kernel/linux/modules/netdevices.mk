@@ -418,6 +418,24 @@ endef
 $(eval $(call KernelPackage,switch-ip17xx))
 
 
+define KernelPackage/switch-qca8k
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=QCA8k device support
+  KCONFIG:= \
+	CONFIG_NET_DSA_QCA8K \
+	CONFIG_NET_DSA_TAG_QCA=y \
+	CONFIG_REGMAP=y
+  FILES:=$(LINUX_DIR)/drivers/net/dsa/qca8k.ko
+  AUTOLOAD:=$(call AutoProbe,qca8k)
+endef
+
+define KernelPackage/switch-qca8k/description
+  This driver supports the qca8k based switches.
+endef
+
+$(eval $(call KernelPackage,switch-qca8k))
+
+
 define KernelPackage/switch-rtl8306
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=Realtek RTL8306S switch support
