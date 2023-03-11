@@ -340,6 +340,22 @@ endef
 $(eval $(call KernelPackage,phy-smsc))
 
 
+define KernelPackage/phy-aquantia
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Aquantia Ethernet PHYs
+  DEPENDS:=+kmod-libphy +kmod-hwmon-core
+  KCONFIG:=CONFIG_AQUANTIA_PHY
+  FILES:=$(LINUX_DIR)/drivers/net/phy/aquantia.ko
+  AUTOLOAD:=$(call AutoLoad,18,aquantia,1)
+endef
+
+define KernelPackage/phy-aquantia/description
+  Kernel modules for Aquantia Ethernet PHYs
+endef
+
+$(eval $(call KernelPackage,phy-aquantia))
+
+
 define KernelPackage/swconfig
   SUBMENU:=$(NETWORK_DEVICES_MENU)
   TITLE:=switch configuration API
@@ -400,6 +416,24 @@ define KernelPackage/switch-ip17xx/description
 endef
 
 $(eval $(call KernelPackage,switch-ip17xx))
+
+
+define KernelPackage/switch-qca8k
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=QCA8k device support
+  KCONFIG:= \
+	CONFIG_NET_DSA_QCA8K \
+	CONFIG_NET_DSA_TAG_QCA=y \
+	CONFIG_REGMAP=y
+  FILES:=$(LINUX_DIR)/drivers/net/dsa/qca8k.ko
+  AUTOLOAD:=$(call AutoProbe,qca8k)
+endef
+
+define KernelPackage/switch-qca8k/description
+  This driver supports the qca8k based switches.
+endef
+
+$(eval $(call KernelPackage,switch-qca8k))
 
 
 define KernelPackage/switch-rtl8306
@@ -1506,4 +1540,20 @@ define KernelPackage/atlantic/description
 endef
 
 $(eval $(call KernelPackage,atlantic))
+
+
+define KernelPackage/lan743x
+  SUBMENU:=$(NETWORK_DEVICES_MENU)
+  TITLE:=Microchip LAN743x PCI Express Gigabit Ethernet NIC
+  DEPENDS:=@PCI_SUPPORT +kmod-ptp
+  KCONFIG:=CONFIG_LAN743X
+  FILES:=$(LINUX_DIR)/drivers/net/ethernet/microchip/lan743x.ko
+  AUTOLOAD:=$(call AutoProbe,lan743x)
+endef
+
+define KernelPackage/lan743x/description
+  Kernel module for Microchip LAN743x PCI Express Gigabit Ethernet NIC
+endef
+
+$(eval $(call KernelPackage,lan743x))
 

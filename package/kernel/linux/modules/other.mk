@@ -86,6 +86,29 @@ endef
 $(eval $(call KernelPackage,ath3k))
 
 
+define KernelPackage/avm-wasp
+  SUBMENU:=$(OTHER_MENU)
+  TITLE:=AVM WASP remote Processor Support
+  DEPENDS:=@TARGET_lantiq_xrx200
+  KCONFIG:= \
+	CONFIG_REMOTEPROC=y \
+	CONFIG_REMOTEPROC_CDEV=y \
+	CONFIG_VIRTIO_BLK=n \
+	CONFIG_VIRTIO_NET=n \
+	CONFIG_INGENIC_VPU_RPROC=n \
+	CONFIG_AVM_WASP_REMOTEPROC
+  FILES:=$(LINUX_DIR)/drivers/remoteproc/avm_wasp.ko
+  AUTOLOAD:=$(call AutoLoad,50,avm-wasp)
+endef
+
+define KernelPackage/avm-wasp/description
+  Support for booting the AVM WASP secondary processor of some AVM fritzbox
+  devices.
+endef
+
+$(eval $(call KernelPackage,avm-wasp))
+
+
 define KernelPackage/bluetooth-6lowpan
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Bluetooth 6LoWPAN support
@@ -834,7 +857,8 @@ define KernelPackage/ramoops
   SUBMENU:=$(OTHER_MENU)
   TITLE:=Ramoops (pstore-ram)
   DEFAULT:=m if ALL_KMODS
-  KCONFIG:=CONFIG_PSTORE_RAM
+  KCONFIG:=CONFIG_PSTORE_RAM \
+	CONFIG_PSTORE_CONSOLE=y
   DEPENDS:=+kmod-pstore +kmod-reed-solomon
   FILES:= $(LINUX_DIR)/fs/pstore/ramoops.ko
   AUTOLOAD:=$(call AutoLoad,30,ramoops,1)

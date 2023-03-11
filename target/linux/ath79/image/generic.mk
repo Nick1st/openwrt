@@ -23,6 +23,27 @@ define Build/append-md5sum-bin
 		xargs echo -ne >> $@
 endef
 
+define Build/avm-wasp-checksum
+       $(STAGING_DIR_HOST)/bin/avm-wasp-checksum \
+               -i "$@" -o "$@.new" -m $(word 1,$(1))
+       mv "$@.new" "$@"
+endef
+
+define Build/avm-wasp-loader-compile
+       rm -rf $@.src
+       $(MAKE) -C lzma-loader \
+               PKG_BUILD_DIR="$@.src" \
+               TARGET_DIR="$(dir $@)" LOADER_NAME="$(notdir $@)" \
+               LZMA_TEXT_START=0x81a00000 LOADADDR=0x80020000 \
+               $(1) compile loader.$(LOADER_TYPE)
+       mv "$@.$(LOADER_TYPE)" "$@"
+       rm -rf $@.src
+endef
+
+define Build/avm-wasp-loader
+       $(call Build/avm-wasp-loader-compile,LOADER_DATA="$@")
+endef
+
 define Build/cybertan-trx
 	@echo -n '' > $@-empty.bin
 	-$(STAGING_DIR_HOST)/bin/trx -o $@.new \
@@ -490,6 +511,19 @@ define Device/avm_fritz4020
 endef
 TARGET_DEVICES += avm_fritz4020
 
+define Device/avm_fritz3390-wasp
+  SOC := ar9342
+  DEVICE_VENDOR := AVM
+  DEVICE_MODEL := FRITZ!Box 3390 WASP (Wireless Assist)
+  KERNEL := kernel-bin | append-dtb | relocate-kernel | lzma-no-dict | \
+      avm-wasp-loader | pad-to 4096 | pad-extra 208 | avm-wasp-checksum 3390
+  LOADER_TYPE := bin
+  KERNEL_INITRAMFS := $$(KERNEL)
+  DEVICE_PACKAGES := wpad -uboot-envtools -swconfig -ppp -kmod-ppp -dnsmasq
+  IMAGE_SIZE := 11000k
+endef
+TARGET_DEVICES += avm_fritz3390-wasp
+
 define Device/avm_fritz450e
   $(Device/avm)
   SOC := qca9556
@@ -508,6 +542,20 @@ define Device/avm_fritzdvbc
 	ath10k-firmware-qca988x-ct -swconfig
 endef
 TARGET_DEVICES += avm_fritzdvbc
+
+define Device/avm_fritzx490-wasp
+  SOC := qca9558
+  DEVICE_VENDOR := AVM
+  DEVICE_MODEL := FRITZ!Box 3490/5490/7490 WASP (Wireless Assist)
+  KERNEL := kernel-bin | append-dtb | relocate-kernel | lzma-no-dict | \
+      avm-wasp-loader | pad-to 4096 | pad-extra 208 | avm-wasp-checksum x490
+  LOADER_TYPE := bin
+  KERNEL_INITRAMFS := $$(KERNEL)
+  DEVICE_PACKAGES := kmod-ath10k-ct ath10k-firmware-qca988x-ct \
+	-uboot-envtools -swconfig -ppp -kmod-ppp -dnsmasq
+  IMAGE_SIZE := 11000k
+endef
+TARGET_DEVICES += avm_fritzx490-wasp
 
 define Device/belkin_f9x-v2
   $(Device/loader-okli-uimage)
@@ -1298,6 +1346,48 @@ define Device/engenius_epg5000
   SUPPORTED_DEVICES += epg5000
 endef
 TARGET_DEVICES += engenius_epg5000
+
+define Device/engenius_esr1200
+  SOC := qca9557
+  DEVICE_VENDOR := EnGenius
+  DEVICE_MODEL := ESR1200
+  DEVICE_PACKAGES := ath10k-firmware-qca988x-ct kmod-ath10k-ct kmod-usb2
+  IMAGE_SIZE := 14656k
+  IMAGES += factory.dlf
+  IMAGE/factory.dlf := append-kernel | pad-to $$$$(BLOCKSIZE) | \
+	append-rootfs | pad-rootfs | check-size | \
+	senao-header -r 0x101 -p 0x61 -t 2
+  SUPPORTED_DEVICES += esr1200 esr1750 engenius,esr1750
+endef
+TARGET_DEVICES += engenius_esr1200
+
+define Device/engenius_esr1750
+  SOC := qca9558
+  DEVICE_VENDOR := EnGenius
+  DEVICE_MODEL := ESR1750
+  DEVICE_PACKAGES := ath10k-firmware-qca988x-ct kmod-ath10k-ct kmod-usb2
+  IMAGE_SIZE := 14656k
+  IMAGES += factory.dlf
+  IMAGE/factory.dlf := append-kernel | pad-to $$$$(BLOCKSIZE) | \
+	append-rootfs | pad-rootfs | check-size | \
+	senao-header -r 0x101 -p 0x62 -t 2
+  SUPPORTED_DEVICES += esr1750 esr1200 engenius,esr1200
+endef
+TARGET_DEVICES += engenius_esr1750
+
+define Device/engenius_esr900
+  SOC := qca9558
+  DEVICE_VENDOR := EnGenius
+  DEVICE_MODEL := ESR900
+  DEVICE_PACKAGES := kmod-usb2
+  IMAGE_SIZE := 14656k
+  IMAGES += factory.dlf
+  IMAGE/factory.dlf := append-kernel | pad-to $$$$(BLOCKSIZE) | \
+	append-rootfs | pad-rootfs | check-size | \
+	senao-header -r 0x101 -p 0x4e -t 2
+  SUPPORTED_DEVICES += esr900
+endef
+TARGET_DEVICES += engenius_esr900
 
 define Device/engenius_ews511ap
   SOC := qca9531
